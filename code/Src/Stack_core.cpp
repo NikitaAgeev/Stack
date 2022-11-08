@@ -3,12 +3,17 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
+#include "Stack_settings.h"
 #include "Stack_core.h"
+#include "Stack.h"
 #include "Stack_debug.h"
+#include "Stack_debug_core.h"
 
 
-static const ssize_t stack_start_size = 2;
+
+static const ssize_t stack_start_size = 10;
 
 static const ssize_t stack_geometri_coef = 2;
 
@@ -32,6 +37,13 @@ static void stack_resize_f (Stack stack);
 static void stack_resize_up_f (Stack stack)
 {   
     
+    assert(stack != nullptr);
+    assert((stack->mem != (stack_el_t*)NEW_NO_CTOR) && (stack->mem != (stack_el_t*)ADR_POISON));
+
+    assert(stack->error == 0);
+    assert(stack->len >= 0);
+    assert(stack->size >= 0);
+
     if( stack->size >= stack_change_resize )
     {
         stack->size += stack_linear_coef;
@@ -47,10 +59,10 @@ static void stack_resize_up_f (Stack stack)
 
     for(itter = stack->len; itter < stack->size; itter++)
     {
-        *(stack->mem + itter) = free_stack_mem_gen();
+        *(stack->mem + itter) = FREE_MEM_SLOT;
     }
     
-    *(stack->mem + stack->size) = back_canary_stack_mem_gen();
+    *(stack->mem + stack->size) = BACK_CANARY;
 
     return;
 }
@@ -58,6 +70,13 @@ static void stack_resize_up_f (Stack stack)
 static void stack_resize_down_f (Stack stack)
 {
     
+    assert(stack != nullptr);
+    assert((stack->mem != (stack_el_t*)NEW_NO_CTOR) && (stack->mem != (stack_el_t*)ADR_POISON));
+
+    assert(stack->error == 0);
+    assert(stack->len >= 0);
+    assert(stack->size >= 0);
+
     ssize_t stack_old_size = stack->size;
     
     if( stack->size > stack_change_resize )
@@ -73,25 +92,31 @@ static void stack_resize_down_f (Stack stack)
 
     for(itter = stack->size; itter < stack_old_size; itter++)
     {
-        *(stack->mem + itter) = poison_stack_mem_gen();
+        *(stack->mem + itter) = POISON_MEM_SLOT;
     }
 
     stack->mem = (stack_el_t*)realloc(stack->mem - 1 , (stack->size + 2) * sizeof(stack_el_t)) + 1;
 
-    *(stack->mem + stack->size) = back_canary_stack_mem_gen();
+    *(stack->mem + stack->size) = BACK_CANARY;
 
     return;
 }
 
 static void stack_mem_init_f (Stack stack)
 {
+    
+    assert(stack != nullptr);
+    assert(stack->mem != (stack_el_t*)ADR_POISON);
+
+    assert(stack->error == 0);
+    
     stack->size = stack_start_size;
-    stack->len = 0;
+    stack->len = 1;
 
     stack->mem = ((stack_el_t*)calloc(stack_start_size + 2, sizeof(stack_el_t))) + 1;
 
-    *(stack->mem + stack->size) = back_canary_stack_mem_gen();
-    *(stack->mem - 1) = first_canary_stack_mem_gen();
+    *(stack->mem + stack->size) = BACK_CANARY;
+    *(stack->mem - 1) = FIRST_CANARY;
 
     return;
 }
@@ -99,7 +124,12 @@ static void stack_mem_init_f (Stack stack)
 static void stack_resize_f (Stack stack)
 {
     
-    if(stack->size == -1)
+    assert(stack != nullptr);
+    assert(stack->mem != (stack_el_t*)ADR_POISON);
+
+    assert(stack->error == 0);
+    
+    if(stack->mem == (stack_el_t*)NEW_NO_CTOR)
     {
         stack_mem_init_f(stack);
         return;
@@ -129,33 +159,30 @@ static void stack_resize_f (Stack stack)
 
 //Constructor_module==================================================================
 
-void stack_no_ctor_f (Stack* stack)
-{
-    
-    *stack = (Stack)NEW_NO_CTOR;
-    
-    return;
-}
-
-void stack_ctor_f (Stack* stack)
+void stack_ctor_f (Stack* stack, const char* name, STACK_EXTRA_ARGS)
 {
     
     *stack = (Stack)(calloc(1, sizeof(struct stack_t)));
-    
+
+    (*stack)->mather_name = funk_name;
+    (*stack)->mather_file = my_file;
+    (*stack)->name = name;
     (*stack)->len = -1;
     (*stack)->size = -1;
-    (*stack)->mem = (stack_el_t*)FREE_MEM_SLOT;
-    
-    stack_resize_f(*stack);
+    (*stack)->mem = (stack_el_t*)NEW_NO_CTOR;
 
     make_cach(*stack);
+
+    FUNC_ASERT(*stack);
 
     return;
 }
 
-void stack_dtor_f (Stack* stack)
+void stack_dtor_f (Stack* stack, STACK_EXTRA_ARGS)
 {
     
+    FUNC_ASERT(*stack);
+
     free((*stack)->mem - 1);
     
     (*stack)->mem = (stack_el_t*)ADR_POISON;
@@ -170,57 +197,47 @@ void stack_dtor_f (Stack* stack)
 
 //Stack_access_module=================================================================
 
-void stack_push_f (Stack* stack, stack_el_t elem)
+void stack_push_f (Stack stack, stack_el_t elem, STACK_EXTRA_ARGS)
 {
     
+    FUNC_ASERT(stack);
 
-    if((*stack) == (Stack)NEW_NO_CTOR) stack_ctor_f(stack);
+    (stack)->len ++;
+    stack_resize_f(stack);
+    *((stack)->mem + (stack)->len - 1) = elem;
     
-    (*stack)->len ++;
-    stack_resize_f(*stack);
-    *((*stack)->mem + (*stack)->len - 1) = elem;
+    make_cach(stack);
     
-    make_cach(*stack);
-    
+    FUNC_ASERT(stack);
+
     return;
 }
 
-stack_el_t stack_pop_f (Stack* stack)
+stack_el_t stack_pop_f (Stack stack, STACK_EXTRA_ARGS)
 { 
 
-    (*stack)->len --;
-    stack_el_t elem = *((*stack)->mem + (*stack)->len);
-    *((*stack)->mem + (*stack)->len) = FREE_MEM_SLOT;
-    stack_resize_f(*stack);
+    FUNC_ASERT(stack);
 
-    make_cach(*stack);
-    
-    return elem;
-}
-
-void printer (stack_el_t elem)
-{
-    printf("%lf", elem);
-}
-
-int main ()
-{
-    Stack st = nullptr;
-    stack_no_ctor_f(&st);
-    
-    
-    for(int i = 0; i < 13; i ++)
+    if((stack)->len > 0)
     {
-        stack_push_f(&st, i);
+        (stack)->len --;
+        stack_el_t elem = *((stack)->mem + (stack)->len);
+        *((stack)->mem + (stack)->len) = FREE_MEM_SLOT;
+        stack_resize_f(stack);
+
+        make_cach(stack);
+        
+        FUNC_ASERT(stack);
+
+        return elem;
     }
-
-    stack_dump_status(st, printer);
-
-    for(int i = 0; i < 13; i ++)
+    else
     {
-        stack_pop_f(&st);
-    }
-    
 
-    stack_dtor_f(&st);
+        FUNC_ASERT(stack);
+
+        return 0;
+    }
 }
+
+

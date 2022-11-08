@@ -1,0 +1,1 @@
+typedef double stack_el_t;
