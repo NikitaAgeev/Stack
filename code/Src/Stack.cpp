@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "Stack.h"
-#include "Stack_debug.h"
 
 void printer (stack_el_t elem, FILE* log_file)
 {

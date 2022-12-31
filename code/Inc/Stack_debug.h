@@ -32,19 +32,35 @@ static void (*const STACK_ELEM_PRINTER)(stack_el_t elem, FILE* log_file) = stack
 #define STACK_WARNO(stack) stack_warno_f(stack, (FILE*) STACK_LOG_FILE)
 
 
-#define STACK_ASSERT_EXTRA_ARG const char* my_file, const char* my_func, size_t line, FILE* file, \
-                               void (*const printer)(stack_el_t elem, FILE* log_file)
+//assert_ARG_defines========================================================
 
-#define STACK_ASSERT_E_ARG_IN __FILE__, __FUNCTION__, __LINE__, STACK_LOG_FILE, STACK_ELEM_PRINTER
+//debug
+#define STACK_ASSERT_DEBUG_EARG FILE* file, void (*const printer)(stack_el_t elem, FILE* log_file)
+
+#define STACK_ASSERT_DEBUG_EARG_IN STACK_LOG_FILE, STACK_ELEM_PRINTER
+
+//dump_info
+#define STACK_ASSERT_DINFO_EARG const char* my_file, const char* my_func, size_t line
+
+#define STACK_ASSERT_DINFO_EARG_IN __FILE__, __FUNCTION__, __LINE__
+
+//extra_args_define
+#define STACK_ASSERT_EARG    STACK_ASSERT_DINFO_EARG, \
+                             STACK_ASSERT_DEBUG_EARG
+
+#define STACK_ASSERT_EARG_IN STACK_ASSERT_DINFO_EARG_IN, \
+                             STACK_ASSERT_DEBUG_EARG_IN
+
+//asserts====================================================================
 
 //predefinition_assertarion_functions----------------------------------------
 
-int stack_assert_f (Stack stack, STACK_ASSERT_EXTRA_ARG);
+int stack_assert_f (Stack stack, STACK_ASSERT_EARG);
 
-int stack_verifi_f (Stack stack, STACK_ASSERT_EXTRA_ARG);
+int stack_verifi_f (Stack stack, STACK_ASSERT_EARG);
 
 //define_assertarion_functions--------------------------------------
 
-#define STACK_ASSERT(stack) stack_assert_f(stack, STACK_ASSERT_E_ARG_IN)
+#define STACK_ASSERT(stack) stack_assert_f(stack, STACK_ASSERT_EARG_IN)
 
-#define STACK_VERIFI(stack) stack_verifi_f(stack, STACK_ASSERT_E_ARG_IN)
+#define STACK_VERIFI(stack) stack_verifi_f(stack, STACK_ASSERT_EARG_IN)

@@ -5,11 +5,10 @@
 #include <string.h>
 #include <assert.h>
 
-#include "Stack_settings.h"
-#include "Stack_core.h"
 #include "Stack.h"
-#include "Stack_debug.h"
+#include "Stack_core.h"
 #include "Stack_debug_core.h"
+
 
 
 
@@ -159,12 +158,12 @@ static void stack_resize_f (Stack stack)
 
 //Constructor_module==================================================================
 
-void stack_ctor_f (Stack* stack, const char* name, STACK_EXTRA_ARGS)
+void stack_ctor_f (Stack* stack, const char* name, STACK_EARGS)
 {
     
     *stack = (Stack)(calloc(1, sizeof(struct stack_t)));
 
-    (*stack)->mather_name = funk_name;
+    (*stack)->mather_name = my_func;
     (*stack)->mather_file = my_file;
     (*stack)->name = name;
     (*stack)->len = -1;
@@ -178,7 +177,7 @@ void stack_ctor_f (Stack* stack, const char* name, STACK_EXTRA_ARGS)
     return;
 }
 
-void stack_dtor_f (Stack* stack, STACK_EXTRA_ARGS)
+void stack_dtor_f (Stack* stack, STACK_EARGS)
 {
     
     FUNC_ASERT(*stack);
@@ -197,7 +196,7 @@ void stack_dtor_f (Stack* stack, STACK_EXTRA_ARGS)
 
 //Stack_access_module=================================================================
 
-void stack_push_f (Stack stack, stack_el_t elem, STACK_EXTRA_ARGS)
+void stack_push_f (Stack stack, stack_el_t elem, STACK_EARGS)
 {
     
     FUNC_ASERT(stack);
@@ -213,7 +212,7 @@ void stack_push_f (Stack stack, stack_el_t elem, STACK_EXTRA_ARGS)
     return;
 }
 
-stack_el_t stack_pop_f (Stack stack, STACK_EXTRA_ARGS)
+stack_el_t stack_pop_f (Stack stack, STACK_EARGS)
 { 
 
     FUNC_ASERT(stack);
