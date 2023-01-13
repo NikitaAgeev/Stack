@@ -35,21 +35,41 @@ static void (*const STACK_ELEM_PRINTER)(stack_el_t elem, FILE* log_file) = stack
 //assert_ARG_defines========================================================
 
 //debug
+#if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
 #define STACK_ASSERT_DEBUG_EARG FILE* file, void (*const printer)(stack_el_t elem, FILE* log_file)
 
 #define STACK_ASSERT_DEBUG_EARG_IN STACK_LOG_FILE, STACK_ELEM_PRINTER
+#else
+#define STACK_ASSERT_DEBUG_EARG    ...
+
+#define STACK_ASSERT_DEBUG_EARG_IN "NO_ARG"
+#endif
 
 //dump_info
+#ifndef NO_STACK_DUMP_EINFO
 #define STACK_ASSERT_DINFO_EARG const char* my_file, const char* my_func, size_t line
 
 #define STACK_ASSERT_DINFO_EARG_IN __FILE__, __FUNCTION__, __LINE__
+#else
+#define STACK_ASSERT_DINFO_EARG 
+
+#define STACK_ASSERT_DINFO_EARG_IN 
+#endif
 
 //extra_args_define
+
+#ifndef NO_STACK_DUMP_EINFO
 #define STACK_ASSERT_EARG    STACK_ASSERT_DINFO_EARG, \
                              STACK_ASSERT_DEBUG_EARG
 
 #define STACK_ASSERT_EARG_IN STACK_ASSERT_DINFO_EARG_IN, \
                              STACK_ASSERT_DEBUG_EARG_IN
+#else
+#define STACK_ASSERT_EARG    STACK_ASSERT_DEBUG_EARG
+
+#define STACK_ASSERT_EARG_IN STACK_ASSERT_DEBUG_EARG_IN
+#endif
+
 
 //asserts====================================================================
 

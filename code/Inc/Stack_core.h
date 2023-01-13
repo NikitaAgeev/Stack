@@ -9,7 +9,7 @@ struct stack_t
     const char* mather_file;
     #endif
 
-    #ifndef NO_STACK_DEBUG
+    #ifndef NO_STACK_ASSERT
     unsigned int hash;
     u_int64_t error;
     u_int64_t warnings;
@@ -26,8 +26,9 @@ typedef struct stack_t* Stack;
 
 enum STACK_ADR_STATUS
 {
+    OK = 0,
     NEW_NO_CTOR = 1,
-    ADR_POISON = 13
+    ADR_POISON = 13,
+    ADR_NO_CONSTRUCT = 31,
+    DATA_LOST = 404 
 };
-
-

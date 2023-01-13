@@ -11,7 +11,7 @@
 
 enum STACK_ASSERT
 {
-    OK = 0,
+    //OK = 0,
     WARNING = 1,
     ERROR = 1 << 1,
 };
@@ -70,7 +70,7 @@ stack_el_t back_canary_stack_mem_gen()
 
 }
 
-//ELEM_CONSTS--------------------------------------------------
+//ELEM_CONSTS_GENERATION--------------------------------------------------
 
 const stack_el_t FREE_MEM_SLOT = free_stack_mem_gen();
 
@@ -138,6 +138,7 @@ static unsigned int MurmurHash2 (char* data, size_t n, size_t size)
 
 void make_cach (Stack stack)
 {
+    #ifndef NO_STACK_ASSERT
     if(stack->mem != (stack_el_t*)NEW_NO_CTOR)
     {
         //unsigned int old_hash = stack->hash;
@@ -159,10 +160,12 @@ void make_cach (Stack stack)
         stack->hash = new_hash;
     }
     else stack->hash = 0;
+    #endif
 }
 
 unsigned int find_cach (Stack stack)
 {
+    #ifndef NO_STACK_ASSERT
     if(stack->mem != (stack_el_t*)NEW_NO_CTOR)
     {
         unsigned int old_hash = stack->hash;
@@ -187,6 +190,10 @@ unsigned int find_cach (Stack stack)
         return new_hash;
     }
     else return 0;
+    #else
+    printf("end_if is called, it shouldn't be like this\n");
+    exit(1);
+    #endif
 }
 
 //============================================================
@@ -260,8 +267,13 @@ void stack_status_dump_f (Stack stack, FILE* log_file)
     }
 
     fprintf(log_file, "adr:         %p\n", stack);
+    
+    #ifndef NO_STACK_DUMP_EINFO
     fprintf(log_file, "name:        %s\n", stack->name);
     fprintf(log_file, "mather_funk: %s:%s\n", stack->mather_file, stack->mather_name);
+    #endif
+
+    #ifndef NO_STACK_ASSERT
     fprintf(log_file, "hash:        %08X\n", stack->hash);
 
     if(stack->error) stack_errno_f(stack, log_file);
@@ -269,7 +281,8 @@ void stack_status_dump_f (Stack stack, FILE* log_file)
     
     if(stack->warnings) stack_warno_f(stack, log_file);
     else fprintf(log_file, "warnings:    %08lX\n", stack->warnings);
-    
+    #endif
+
     fprintf(log_file, "size:        %ld\n", stack->size);
     fprintf(log_file, "len:         %ld\n", stack->len);
 }
@@ -291,7 +304,7 @@ void stack_dump_f (Stack stack, void (*printer)(stack_el_t elem, FILE* log_file)
 
 static int cheack_canary(Stack stack)
 {
-    
+    #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
     int err_out = OK; 
 
     if(*(stack->mem - 1) != FIRST_CANARY)
@@ -324,12 +337,13 @@ static int cheack_canary(Stack stack)
     }
 
     if(err_out | WARNING) return err_out;
-
+    #endif
+    return OK;
 }
 
 static int cheack_free_slot (Stack stack)
 {
-    
+    #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
     ssize_t itter = 0;
     int err_out = OK;
 
@@ -355,12 +369,14 @@ static int cheack_free_slot (Stack stack)
         if(err_out | ERROR) return err_out;
 
     }
+    #endif
+    return OK;
 
 }
 
 static int cheack_poison (Stack stack)
 {
-       
+    #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT  
     ssize_t itter = 0;
     int err_out = OK;
 
@@ -386,12 +402,13 @@ static int cheack_poison (Stack stack)
         if(err_out | ERROR) return err_out;
 
     }
-
+    #endif
+    return OK;
 }
 
 static int cheack_hash (Stack stack)
 {
-    
+    #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
     if(stack->hash != find_cach(stack))
     {
         stack->error |= BAD_HASH;
@@ -401,18 +418,20 @@ static int cheack_hash (Stack stack)
     {
         return OK;
     }
-    
+    #endif
+    return OK;
 }
 
 static int make_error_steck (Stack stack)
 {
 
+    #ifndef NO_STACK_ASSERT
     if(stack == (Stack)ADR_POISON)
     {
         return ERROR;
     }
 
-    stack->warnings = 0;
+    stack->warnings = stack->warnings & STACK_HAS_BEEN_CLEARED;
 
     if(stack->len > stack->size)
     {
@@ -468,6 +487,10 @@ static int make_error_steck (Stack stack)
     {
         return WARNING;
     }
+    #else
+    printf("make_error_stack is called, it shouldn't be like this\n");
+    exit(1);
+    #endif
 
 }
 
@@ -476,6 +499,7 @@ static int make_error_steck (Stack stack)
 int stack_errno_f (Stack stack, FILE* log_file)
 {
     
+    #ifndef NO_STACK_ASSERT
     if(stack->error) fprintf(log_file, "Stack is error: %08lX \n", stack->error);
 
     if(stack->error & BAD_FIRST_CANARY)      fprintf(log_file, "> The first canary is damaged.\n");
@@ -488,35 +512,53 @@ int stack_errno_f (Stack stack, FILE* log_file)
 
     if(stack->error) return 1;
     else             return 0;
+    #else
+    return 0;
+    #endif
 
 }
 
 int stack_warno_f (Stack stack, FILE* log_file)
 {
+    
+    #ifndef NO_STACK_ASSERT
     if(stack->warnings != 0) fprintf(log_file, "Stack is warning: %08lX \n", stack->warnings);
 
-    if(stack->warnings & FIRST_CANARY_INSIDE) fprintf(log_file, "> The first canary in the body of the stack.\n");
-    if(stack->warnings & BACK_CANARY_INSIDE)  fprintf(log_file, "> The back canary in the body of the stack.\n");
-    if(stack->warnings & FREE_SLOT_INSIDE)    fprintf(log_file, "> Free slot in the body of the stack.\n");
-    if(stack->warnings & POISON_SLOT_INSIDE)  fprintf(log_file, "> Poison slot in the body of the stack.\n");
+    if(stack->warnings & FIRST_CANARY_INSIDE)     fprintf(log_file, "> The first canary in the body of the stack.\n");
+    if(stack->warnings & BACK_CANARY_INSIDE)      fprintf(log_file, "> The back canary in the body of the stack.\n");
+    if(stack->warnings & FREE_SLOT_INSIDE)        fprintf(log_file, "> Free slot in the body of the stack.\n");
+    if(stack->warnings & POISON_SLOT_INSIDE)      fprintf(log_file, "> Poison slot in the body of the stack.\n");
+    if(stack->warnings & STACK_HAS_BEEN_CLEARED)  fprintf(log_file, "> Stack has been cleared.\n");
 
     if(stack->warnings) return 1;
     else                return 0;
+    #else
+    return 0;
+    #endif
+
 }
 
 u_int64_t stack_error_code (Stack stack)
 {
+    #ifndef NO_STACK_ASSERT
     return stack->error;
+    #else
+    return 0;
+    #endif
 }
 
 u_int64_t stack_warning_code(Stack stack)
 {
+    #ifndef NO_STACK_ASSERT
     return stack->warnings;
+    #else
+    return 0;
+    #endif
 }
 
 int stack_funk_assert_f(Stack stack, const char* parant_func, STACK_ASSERT_EARG)
 {
-    
+    #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
     int assert_result = make_error_steck(stack);
     
     if(assert_result == ERROR)
@@ -550,10 +592,13 @@ int stack_funk_assert_f(Stack stack, const char* parant_func, STACK_ASSERT_EARG)
     {
         return OK;
     }
+    #endif
+    return OK;
 }
 
 int stack_assert_f (Stack stack, STACK_ASSERT_EARG)
 {
+    #ifndef NO_STACK_ASSERT
     int assert_result = make_error_steck(stack);
     
     if(assert_result == ERROR)
@@ -585,10 +630,12 @@ int stack_assert_f (Stack stack, STACK_ASSERT_EARG)
     {
         return OK;
     }
+    #endif
 }
 
 int stack_verifi_f (Stack stack, STACK_ASSERT_EARG)
 {
+    #ifndef NO_STACK_ASSERT
     int assert_result = make_error_steck(stack);
     
     if(assert_result == ERROR)
@@ -605,20 +652,17 @@ int stack_verifi_f (Stack stack, STACK_ASSERT_EARG)
         stack_dump_f(stack, printer, file);
         fprintf(file, "\n\n");
 
-        #ifndef CRITICAL_WARNINGS
         return WARNING;
-        #else
-        fclose(file);
-
-        printf("Stack assertation failed\n");
-        abort();
-        #endif
         
     }
     else
     {
         return OK;
     }
+    #else
+    return OK;
+    #endif
+    
 }
 
 //============================================================

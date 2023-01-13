@@ -18,7 +18,7 @@ typedef struct stack_t* Stack;
 
 //FUNCTION_ACCESS============================================================
 
-void stack_ctor_f (Stack* stack, const char* name, STACK_EARGS);
+int stack_ctor_f (Stack* stack, const char* name, STACK_EARGS);
 
 void stack_dtor_f (Stack* stack, STACK_EARGS);
 

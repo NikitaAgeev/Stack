@@ -19,11 +19,11 @@ enum STACK_ERROR
 
 enum STACK_WARNINGS
 {
-    FIRST_CANARY_INSIDE = 1 << 0,
-    BACK_CANARY_INSIDE  = 1 << 1,
-    FREE_SLOT_INSIDE    = 1 << 2,
-    POISON_SLOT_INSIDE  = 1 << 3,
-    
+    FIRST_CANARY_INSIDE    = 1 << 0,
+    BACK_CANARY_INSIDE     = 1 << 1,
+    FREE_SLOT_INSIDE       = 1 << 2,
+    POISON_SLOT_INSIDE     = 1 << 3,
+    STACK_HAS_BEEN_CLEARED = 1 << 4,
 };
 
 
@@ -36,9 +36,19 @@ void make_cach (Stack stack);
 
 unsigned int find_cach (Stack stack);
 
+
+#if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
+
 int stack_funk_assert_f(Stack stack, const char* parant_func, STACK_ASSERT_EARG);
-
-
 #define STACK_A_E_A_I_CORE my_file, __FUNCTION__, line, file, printer
-
 #define FUNC_ASERT(STACK) stack_funk_assert_f(STACK, my_func, STACK_A_E_A_I_CORE)
+
+#else
+
+#define FUNC_ASERT(STACK); 
+
+#endif
+
+
+
+

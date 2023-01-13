@@ -1,9 +1,6 @@
-adr:         0x55d382f06480
+adr:         0x5584a055c480
 name:        st
 mather_funk: code/Src/Stack.cpp:main
-hash:        9F96A6F3
-errors:      00000000
-warnings:    00000000
 size:        50
 len:         45
 memory dump:
@@ -61,12 +58,9 @@ memory dump:
 0050 | BC BC BC BC | BC BC BC BC | < BACK_CANARY
 
 
-adr:         0x55d382f06480
+adr:         0x5584a055c480
 name:        st
 mather_funk: code/Src/Stack.cpp:main
-hash:        BFC8C5C3
-errors:      00000000
-warnings:    00000000
 size:        10
 len:         5
 memory dump:
@@ -82,11 +76,5 @@ memory dump:
 0008 | F5 F5 F5 F5 | F5 F5 F5 F5 | < FREE_SLOT
 0009 | F5 F5 F5 F5 | F5 F5 F5 F5 | < FREE_SLOT
 0010 | BC BC BC BC | BC BC BC BC | < BACK_CANARY
-
-
-ERROR assertation at function "main" at code/Src/Stack.cpp:stack_pop_f:46
-Stack is ded
-memory dump:
-Steck is ded
 
 

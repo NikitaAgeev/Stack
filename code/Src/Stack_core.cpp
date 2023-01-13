@@ -39,7 +39,9 @@ static void stack_resize_up_f (Stack stack)
     assert(stack != nullptr);
     assert((stack->mem != (stack_el_t*)NEW_NO_CTOR) && (stack->mem != (stack_el_t*)ADR_POISON));
 
+    #ifndef NO_STACK_ASSERT
     assert(stack->error == 0);
+    #endif
     assert(stack->len >= 0);
     assert(stack->size >= 0);
 
@@ -53,6 +55,12 @@ static void stack_resize_up_f (Stack stack)
     }
 
     stack->mem = ( (stack_el_t*)realloc(stack->mem - 1, ((stack->size + 2) * sizeof(stack_el_t))) ) + 1;    
+
+    if(stack->mem == NULL)
+    {
+        stack->mem = (stack_el_t*)DATA_LOST;
+        return;
+    }
 
     ssize_t itter = 0;
 
@@ -72,7 +80,9 @@ static void stack_resize_down_f (Stack stack)
     assert(stack != nullptr);
     assert((stack->mem != (stack_el_t*)NEW_NO_CTOR) && (stack->mem != (stack_el_t*)ADR_POISON));
 
+    #ifndef NO_STACK_ASSERT
     assert(stack->error == 0);
+    #endif
     assert(stack->len >= 0);
     assert(stack->size >= 0);
 
@@ -96,6 +106,12 @@ static void stack_resize_down_f (Stack stack)
 
     stack->mem = (stack_el_t*)realloc(stack->mem - 1 , (stack->size + 2) * sizeof(stack_el_t)) + 1;
 
+    if(stack->mem == NULL)
+    {
+        stack->mem = (stack_el_t*)DATA_LOST;
+        return;
+    }
+
     *(stack->mem + stack->size) = BACK_CANARY;
 
     return;
@@ -107,12 +123,20 @@ static void stack_mem_init_f (Stack stack)
     assert(stack != nullptr);
     assert(stack->mem != (stack_el_t*)ADR_POISON);
 
+    #ifndef NO_STACK_ASSERT
     assert(stack->error == 0);
-    
+    #endif
+
     stack->size = stack_start_size;
     stack->len = 1;
 
     stack->mem = ((stack_el_t*)calloc(stack_start_size + 2, sizeof(stack_el_t))) + 1;
+
+    if(stack->mem == NULL)
+    {
+        stack->mem = (stack_el_t*)DATA_LOST;
+        return;
+    }
 
     *(stack->mem + stack->size) = BACK_CANARY;
     *(stack->mem - 1) = FIRST_CANARY;
@@ -126,7 +150,9 @@ static void stack_resize_f (Stack stack)
     assert(stack != nullptr);
     assert(stack->mem != (stack_el_t*)ADR_POISON);
 
+    #ifndef NO_STACK_ASSERT
     assert(stack->error == 0);
+    #endif
     
     if(stack->mem == (stack_el_t*)NEW_NO_CTOR)
     {
@@ -158,14 +184,36 @@ static void stack_resize_f (Stack stack)
 
 //Constructor_module==================================================================
 
-void stack_ctor_f (Stack* stack, const char* name, STACK_EARGS)
+int stack_ctor_f (Stack* stack, const char* name, STACK_EARGS)
 {
+    int clear_flag = 0;
     
-    *stack = (Stack)(calloc(1, sizeof(struct stack_t)));
+    if((*stack != nullptr) && (*stack != (Stack)ADR_POISON))
+    {
+        free((*stack)->mem);
+        clear_flag = 1;
+    }
 
+    *stack = (Stack)(calloc(1, sizeof(struct stack_t)));
+    
+    if(*stack == nullptr)
+    {
+        *stack = (Stack)ADR_NO_CONSTRUCT;
+        return ADR_NO_CONSTRUCT;
+    }
+
+    #ifndef NO_STACK_DUMP_EINFO
     (*stack)->mather_name = my_func;
     (*stack)->mather_file = my_file;
     (*stack)->name = name;
+    #endif
+
+    #ifndef NO_STACK_ASSERT
+    (*stack)->error = 0;
+    (*stack)->warnings = 0;
+    if(clear_flag == 1) (*stack)->warnings = STACK_HAS_BEEN_CLEARED;
+    #endif
+
     (*stack)->len = -1;
     (*stack)->size = -1;
     (*stack)->mem = (stack_el_t*)NEW_NO_CTOR;
@@ -174,7 +222,7 @@ void stack_ctor_f (Stack* stack, const char* name, STACK_EARGS)
 
     FUNC_ASERT(*stack);
 
-    return;
+    return OK;
 }
 
 void stack_dtor_f (Stack* stack, STACK_EARGS)
@@ -216,6 +264,11 @@ stack_el_t stack_pop_f (Stack stack, STACK_EARGS)
 { 
 
     FUNC_ASERT(stack);
+
+    if( (stack == nullptr) || (stack == (Stack)ADR_POISON) || (stack == (Stack)DATA_LOST))
+    {
+        return 0;
+    }
 
     if((stack)->len > 0)
     {
