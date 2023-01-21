@@ -1,4 +1,6 @@
-
+/*
+This is the file required to use the library, which contains a description of the basic functions for the stack.
+*/
 
 #include "Stack_settings.h"
 

@@ -1,3 +1,6 @@
+/*
+This is a file containing the information needed to debug the stack
+*/
 
 //predefinition_dump_function=================================
 
@@ -21,6 +24,7 @@ static void (*const STACK_ELEM_PRINTER)(stack_el_t elem, FILE* log_file) = stack
 
 #define STACK_LOG_CLOSE() fclose((FILE*)STACK_LOG_FILE)
 
+
 #define STACK_DUMP(stack) stack_dump_f(stack, STACK_ELEM_PRINTER, (FILE*) STACK_LOG_FILE);\
                           fprintf((FILE*) STACK_LOG_FILE, "\n\n")
 
@@ -34,17 +38,12 @@ static void (*const STACK_ELEM_PRINTER)(stack_el_t elem, FILE* log_file) = stack
 
 //assert_ARG_defines========================================================
 
-//rezistet args 
-#define STACK_ASSERT_DEBUG_EARG_R FILE* file, void (*const printer)(stack_el_t elem, FILE* log_file)
+/*
+This is a block of definitions for grouping and changing additional arguments library functions
+IN - a group of values of the transmitted parameters
+*/
 
-#define STACK_ASSERT_DEBUG_EARG_IN_R STACK_LOG_FILE, STACK_ELEM_PRINTER
-
-#define STACK_ASSERT_DINFO_EARG_R const char* my_file, const char* my_func, size_t line
-
-#define STACK_ASSERT_DINFO_EARG_IN_R __FILE__, __FUNCTION__, __LINE__
-
-
-//debug
+//debug - A group of variables required to output debag information
 #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
 #define STACK_ASSERT_DEBUG_EARG FILE* file, void (*const printer)(stack_el_t elem, FILE* log_file)
 
@@ -55,7 +54,7 @@ static void (*const STACK_ELEM_PRINTER)(stack_el_t elem, FILE* log_file) = stack
 #define STACK_ASSERT_DEBUG_EARG_IN "NO_ARG"
 #endif
 
-//dump_info
+//dump_info - A group of variables that is necessary to output and store additional information useful during debag
 #ifndef NO_STACK_DUMP_EINFO
 #define STACK_ASSERT_DINFO_EARG const char* my_file, const char* my_func, size_t line
 
@@ -66,7 +65,7 @@ static void (*const STACK_ELEM_PRINTER)(stack_el_t elem, FILE* log_file) = stack
 #define STACK_ASSERT_DINFO_EARG_IN 
 #endif
 
-//extra_args_define
+//extra_args_define - Merging of the two previous groups
 
 #ifndef NO_STACK_DUMP_EINFO
 #define STACK_ASSERT_EARG    STACK_ASSERT_DINFO_EARG, \
@@ -79,6 +78,15 @@ static void (*const STACK_ELEM_PRINTER)(stack_el_t elem, FILE* log_file) = stack
 
 #define STACK_ASSERT_EARG_IN STACK_ASSERT_DEBUG_EARG_IN
 #endif
+
+//rezistet args - They do not change depending on the compilation keys
+#define STACK_ASSERT_DEBUG_EARG_R FILE* file, void (*const printer)(stack_el_t elem, FILE* log_file)
+
+#define STACK_ASSERT_DEBUG_EARG_IN_R STACK_LOG_FILE, STACK_ELEM_PRINTER
+
+#define STACK_ASSERT_DINFO_EARG_R const char* my_file, const char* my_func, size_t line
+
+#define STACK_ASSERT_DINFO_EARG_IN_R __FILE__, __FUNCTION__, __LINE__
 
 
 //asserts====================================================================

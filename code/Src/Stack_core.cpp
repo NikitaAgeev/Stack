@@ -1,3 +1,7 @@
+/*
+This file describes the stack and the main mechanisms of its operation.
+*/
+
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
@@ -11,25 +15,27 @@
 
 
 
+//Resizing_module=====================================================================
 
-static const ssize_t stack_start_size = 10;
+//Resize settings---------------------------------------------------------------------
 
-static const ssize_t stack_geometri_coef = 2;
-
-static const ssize_t stack_linear_coef = 10;
-
-static const ssize_t stack_change_resize = stack_start_size * pow(stack_geometri_coef, 2);
+/// The stack size at which the exponential growth of the stack size becomes linear.
+static const ssize_t stack_change_resize = stack_start_size * pow(stack_geometri_coef, stack_num_exp_increases);  
 
 
+//function declaration----------------------------------------------------------------
+
+///only for stack_resize_f
 static void  stack_resize_up_f (Stack stack);
 
+///only for stack_resize_f
 static void stack_resize_down_f (Stack stack);
 
+///only for stack_resize_f
 static void stack_mem_init_f (Stack stack);
 
 static void stack_resize_f (Stack stack);
 
-//Resizing_module=====================================================================
 
 //Functions---------------------------------------------------------------------------
 
@@ -38,12 +44,12 @@ static void stack_resize_up_f (Stack stack)
     
     assert(stack != nullptr);
     assert((stack->mem != (stack_el_t*)NEW_NO_CTOR) && (stack->mem != (stack_el_t*)ADR_POISON));
+    assert(stack->len >= 0);
+    assert(stack->size >= 0);
 
     #ifndef NO_STACK_ASSERT
     assert(stack->error == 0);
     #endif
-    assert(stack->len >= 0);
-    assert(stack->size >= 0);
 
     if( stack->size >= stack_change_resize )
     {
@@ -72,6 +78,7 @@ static void stack_resize_up_f (Stack stack)
     *(stack->mem + stack->size) = BACK_CANARY;
 
     return;
+
 }
 
 static void stack_resize_down_f (Stack stack)
@@ -79,16 +86,16 @@ static void stack_resize_down_f (Stack stack)
     
     assert(stack != nullptr);
     assert((stack->mem != (stack_el_t*)NEW_NO_CTOR) && (stack->mem != (stack_el_t*)ADR_POISON));
+    assert(stack->len >= 0);
+    assert(stack->size >= 0);
 
     #ifndef NO_STACK_ASSERT
     assert(stack->error == 0);
     #endif
-    assert(stack->len >= 0);
-    assert(stack->size >= 0);
 
     ssize_t stack_old_size = stack->size;
     
-    if( stack->size > stack_change_resize )
+    if(stack->size > stack_change_resize)
     {
         stack->size -= stack_linear_coef;
     }
@@ -104,7 +111,7 @@ static void stack_resize_down_f (Stack stack)
         *(stack->mem + itter) = POISON_MEM_SLOT;
     }
 
-    stack->mem = (stack_el_t*)realloc(stack->mem - 1 , (stack->size + 2) * sizeof(stack_el_t)) + 1;
+    stack->mem = (stack_el_t*)realloc(stack->mem - 1, (stack->size + 2) * sizeof(stack_el_t)) + 1;
 
     if(stack->mem == NULL)
     {
@@ -115,6 +122,7 @@ static void stack_resize_down_f (Stack stack)
     *(stack->mem + stack->size) = BACK_CANARY;
 
     return;
+
 }
 
 static void stack_mem_init_f (Stack stack)
@@ -142,6 +150,7 @@ static void stack_mem_init_f (Stack stack)
     *(stack->mem - 1) = FIRST_CANARY;
 
     return;
+
 }
 
 static void stack_resize_f (Stack stack)
@@ -178,6 +187,7 @@ static void stack_resize_f (Stack stack)
     }
 
     return;
+
 }
 
 //Define------------------------------------------------------------------------------
@@ -186,8 +196,10 @@ static void stack_resize_f (Stack stack)
 
 int stack_ctor_f (Stack* stack, const char* name, STACK_EARGS)
 {
+    
     int clear_flag = 0;
 
+    //anty_unuse_var
     #ifndef NO_STACK_DUMP_EINFO
     UNUSE_IF_NO_FNKASSERT(line);
     #else
@@ -231,10 +243,13 @@ int stack_ctor_f (Stack* stack, const char* name, STACK_EARGS)
     FUNC_ASERT(*stack);
 
     return OK;
+
 }
 
 void stack_dtor_f (Stack* stack, STACK_EARGS)
 {
+    
+    //anty_unuse_var
     #ifndef NO_STACK_DUMP_EINFO
     UNUSE_IF_NO_FNKASSERT(my_file);
     UNUSE_IF_NO_FNKASSERT(my_func);
@@ -253,12 +268,15 @@ void stack_dtor_f (Stack* stack, STACK_EARGS)
 
     *stack = (Stack)ADR_POISON;
     return;
+
 }
 
 //Stack_access_module=================================================================
 
 void stack_push_f (Stack stack, stack_el_t elem, STACK_EARGS)
 {
+    
+    //anty_unuse_var
     #ifndef NO_STACK_DUMP_EINFO
     UNUSE_IF_NO_FNKASSERT(my_file);
     UNUSE_IF_NO_FNKASSERT(my_func);
@@ -269,6 +287,8 @@ void stack_push_f (Stack stack, stack_el_t elem, STACK_EARGS)
 
     (stack)->len ++;
     stack_resize_f(stack);
+
+    if(stack->mem != ((stack_el_t*)DATA_LOST))
     *((stack)->mem + (stack)->len - 1) = elem;
     
     make_cach(stack);
@@ -276,10 +296,13 @@ void stack_push_f (Stack stack, stack_el_t elem, STACK_EARGS)
     FUNC_ASERT(stack);
 
     return;
+
 }
 
 stack_el_t stack_pop_f (Stack stack, STACK_EARGS)
 { 
+    
+    //anty_uneuse_var
     #ifndef NO_STACK_DUMP_EINFO
     UNUSE_IF_NO_FNKASSERT(my_file);
     UNUSE_IF_NO_FNKASSERT(my_func);
@@ -313,6 +336,7 @@ stack_el_t stack_pop_f (Stack stack, STACK_EARGS)
 
         return 0;
     }
+
 }
 
 

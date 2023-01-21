@@ -1,14 +1,20 @@
+/*
+This is a file describing the functions and variables necessary for the library function to work.
+*/
 
-#ifndef STACK_CORE_STRUCT
-#define STACK_CORE_STRUCT
+#ifndef STACK_CORE_H
+#define STACK_CORE_H
+
 struct stack_t
 {
+    //Additional information about the stack
     #ifndef NO_STACK_DUMP_EINFO
     const char* name;
     const char* mather_name;
     const char* mather_file;
     #endif
 
+    //Additional information for error handling
     #ifndef NO_STACK_ASSERT
     unsigned int hash;
     u_int64_t error;
@@ -20,6 +26,10 @@ struct stack_t
     stack_el_t* mem;
 };
 
+/// [Stack] is a pointer to the control structure
+typedef struct stack_t* Stack; 
+
+//unuse variable resistens defines=================================
 
 #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
 #define UNUSE_IF_NO_FNKASSERT(PARAM);
@@ -56,9 +66,7 @@ struct stack_t
 (void)my_func;              \
 (void)line;      
 
-typedef struct stack_t* Stack;
-
-#endif
+//====================================================================
 
 enum STACK_ADR_STATUS
 {
@@ -68,3 +76,5 @@ enum STACK_ADR_STATUS
     ADR_NO_CONSTRUCT = 31,
     DATA_LOST = 404 
 };
+
+#endif

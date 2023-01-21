@@ -1,3 +1,6 @@
+/*
+This file describes the stack debug
+*/
 
 #include <stdlib.h>
 #include <math.h>
@@ -11,7 +14,7 @@
 
 enum STACK_ASSERT
 {
-    //OK = 0,
+    //OK = 0, - conflicting name
     WARNING = 1,
     ERROR = 1 << 1,
 };
@@ -311,6 +314,8 @@ void stack_dump_f (Stack stack, void (*printer)(stack_el_t elem, FILE* log_file)
 //ASSERT_FUNK=================================================
 
 //STATIC------------------------------------------------------
+
+//unuse function resistans
 #if !defined NO_STACK_ASSERT
 static int cheack_canary(Stack stack)
 {
