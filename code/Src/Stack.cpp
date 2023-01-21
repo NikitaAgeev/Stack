@@ -45,5 +45,9 @@ int main ()
 
     POP(st);
 
+    STACK_VERIFI(st);
+
+    STACK_ASSERT(st);
+
     STACK_LOG_CLOSE();
 }

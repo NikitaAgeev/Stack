@@ -84,6 +84,8 @@ const stack_el_t BACK_CANARY = back_canary_stack_mem_gen();
 
 //HASH_GENERATOR==============================================
 
+#if !defined NO_STACK_ASSERT
+
 static unsigned int MurmurHash2 (char* data, size_t n, size_t size);
 
 static unsigned int MurmurHash2 (char* data, size_t n, size_t size)
@@ -116,6 +118,8 @@ static unsigned int MurmurHash2 (char* data, size_t n, size_t size)
       len -= 4;
   }
 
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+
   switch (len)
   {
     case 3:
@@ -127,6 +131,8 @@ static unsigned int MurmurHash2 (char* data, size_t n, size_t size)
       h *= m;
   };
 
+#pragma GCC diagnostic warning "-Wimplicit-fallthrough"
+
   h ^= h >> 13;
   h *= m;
   h ^= h >> 15;
@@ -134,10 +140,13 @@ static unsigned int MurmurHash2 (char* data, size_t n, size_t size)
   return h;
 }
 
+#endif
+
 //HASH_TO_STACK-----------------------------------------------
 
 void make_cach (Stack stack)
 {
+    UNUSE_IF_NO_FNKASSERT(stack);
     #ifndef NO_STACK_ASSERT
     if(stack->mem != (stack_el_t*)NEW_NO_CTOR)
     {
@@ -165,6 +174,7 @@ void make_cach (Stack stack)
 
 unsigned int find_cach (Stack stack)
 {
+    UNUSE_IF_NO_FNKASSERT(stack);
     #ifndef NO_STACK_ASSERT
     if(stack->mem != (stack_el_t*)NEW_NO_CTOR)
     {
@@ -266,7 +276,7 @@ void stack_status_dump_f (Stack stack, FILE* log_file)
         return;
     }
 
-    fprintf(log_file, "adr:         %p\n", stack);
+    fprintf(log_file, "adr:         %p\n", (void*)stack);
     
     #ifndef NO_STACK_DUMP_EINFO
     fprintf(log_file, "name:        %s\n", stack->name);
@@ -301,10 +311,10 @@ void stack_dump_f (Stack stack, void (*printer)(stack_el_t elem, FILE* log_file)
 //ASSERT_FUNK=================================================
 
 //STATIC------------------------------------------------------
-
+#if !defined NO_STACK_ASSERT
 static int cheack_canary(Stack stack)
 {
-    #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
+    #if !defined NO_STACK_ASSERT
     int err_out = OK; 
 
     if(*(stack->mem - 1) != FIRST_CANARY)
@@ -343,7 +353,8 @@ static int cheack_canary(Stack stack)
 
 static int cheack_free_slot (Stack stack)
 {
-    #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
+    UNUSE_IF_NO_FNKASSERT(stack);
+    #if !defined NO_STACK_ASSERT
     ssize_t itter = 0;
     int err_out = OK;
 
@@ -376,7 +387,8 @@ static int cheack_free_slot (Stack stack)
 
 static int cheack_poison (Stack stack)
 {
-    #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT  
+    UNUSE_IF_NO_FNKASSERT(stack);
+    #if !defined NO_STACK_ASSERT  
     ssize_t itter = 0;
     int err_out = OK;
 
@@ -408,7 +420,8 @@ static int cheack_poison (Stack stack)
 
 static int cheack_hash (Stack stack)
 {
-    #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
+    UNUSE_IF_NO_FNKASSERT(stack);
+    #if !defined NO_STACK_ASSERT
     if(stack->hash != find_cach(stack))
     {
         stack->error |= BAD_HASH;
@@ -424,7 +437,7 @@ static int cheack_hash (Stack stack)
 
 static int make_error_steck (Stack stack)
 {
-
+    UNUSE_IF_NO_FNKASSERT(stack);
     #ifndef NO_STACK_ASSERT
     if(stack == (Stack)ADR_POISON)
     {
@@ -491,14 +504,17 @@ static int make_error_steck (Stack stack)
     printf("make_error_stack is called, it shouldn't be like this\n");
     exit(1);
     #endif
+    return OK;
 
 }
+#endif
 
 //External----------------------------------------------------
 
 int stack_errno_f (Stack stack, FILE* log_file)
 {
-    
+    UNUSE_IF_NO_FNKASSERT(stack);
+    UNUSE_IF_NO_FNKASSERT(log_file);
     #ifndef NO_STACK_ASSERT
     if(stack->error) fprintf(log_file, "Stack is error: %08lX \n", stack->error);
 
@@ -520,7 +536,8 @@ int stack_errno_f (Stack stack, FILE* log_file)
 
 int stack_warno_f (Stack stack, FILE* log_file)
 {
-    
+    UNUSE_IF_NO_FNKASSERT(stack);
+    UNUSE_IF_NO_FNKASSERT(log_file);
     #ifndef NO_STACK_ASSERT
     if(stack->warnings != 0) fprintf(log_file, "Stack is warning: %08lX \n", stack->warnings);
 
@@ -540,6 +557,7 @@ int stack_warno_f (Stack stack, FILE* log_file)
 
 u_int64_t stack_error_code (Stack stack)
 {
+    UNUSE_IF_NO_FNKASSERT(stack);
     #ifndef NO_STACK_ASSERT
     return stack->error;
     #else
@@ -549,6 +567,7 @@ u_int64_t stack_error_code (Stack stack)
 
 u_int64_t stack_warning_code(Stack stack)
 {
+    UNUSE_IF_NO_FNKASSERT(stack);
     #ifndef NO_STACK_ASSERT
     return stack->warnings;
     #else
@@ -558,12 +577,18 @@ u_int64_t stack_warning_code(Stack stack)
 
 int stack_funk_assert_f(Stack stack, const char* parant_func, STACK_ASSERT_EARG)
 {
+    UNUSE_IF_NO_FNKASSERT(stack);
+    UNUSE_IF_NO_FNKASSERT(parant_func);
+
+    NO_USE_DBUG_EARGS
+    NO_USE_DINFO_EARGS
+
     #if !defined NO_STACK_ASSERT && !defined NO_STACK_FUNCK_ASSERT
     int assert_result = make_error_steck(stack);
     
     if(assert_result == ERROR)
     {
-        fprintf(file, "ERROR assertation at function \"%s\" at %s:%s:%lu\n", parant_func, my_file, my_func, line);
+        fprintf(file, "ERROR assertation at function \"%s\" at %s:%s:%lu\n", my_func, my_file, parant_func, line);
         stack_dump_f(stack, printer, file);
         fprintf(file, "\n\n");
         
@@ -574,7 +599,7 @@ int stack_funk_assert_f(Stack stack, const char* parant_func, STACK_ASSERT_EARG)
     }
     else if(assert_result == WARNING)
     {
-        fprintf(file, "Warning assertation at function \"%s\" at %s:%s:%lu\n", parant_func, my_file, my_func, line);
+        fprintf(file, "Warning assertation at function \"%s\" at %s:%s:%lu\n", my_func, my_file, parant_func, line);
         stack_dump_f(stack, printer, file);
         fprintf(file, "\n\n");
 
@@ -596,13 +621,20 @@ int stack_funk_assert_f(Stack stack, const char* parant_func, STACK_ASSERT_EARG)
     return OK;
 }
 
-int stack_assert_f (Stack stack, STACK_ASSERT_EARG)
+int stack_assert_f (Stack stack, STACK_ASSERT_DINFO_EARG_R, STACK_ASSERT_DEBUG_EARG_R)
 {
+    UNUSE_IF_NO_FNKASSERT(stack);
+
+    NO_USE_R_DBUG_EARGS
+    NO_USE_R_DINFO_EARGS
+
     #ifndef NO_STACK_ASSERT
     int assert_result = make_error_steck(stack);
     
     if(assert_result == ERROR)
     {
+        printf("Stack assertation failed\n");
+
         fprintf(file, "ERROR assertation at function %s:%s:%lu\n", my_file, my_func, line);
         stack_dump_f(stack, printer, file);
         fprintf(file, "\n\n");
@@ -620,8 +652,8 @@ int stack_assert_f (Stack stack, STACK_ASSERT_EARG)
         return WARNING;
         #else
         fclose(file);
-
-        printf("Stack assertation failed\n");
+        
+        fclose(file);
         abort();
         #endif
         
@@ -631,10 +663,17 @@ int stack_assert_f (Stack stack, STACK_ASSERT_EARG)
         return OK;
     }
     #endif
+    return OK;
 }
 
-int stack_verifi_f (Stack stack, STACK_ASSERT_EARG)
+int stack_verifi_f (Stack stack, STACK_ASSERT_DINFO_EARG_R, STACK_ASSERT_DEBUG_EARG_R)
 {
+    UNUSE_IF_NO_FNKASSERT(stack);
+
+    NO_USE_DBUG_EARGS
+    NO_USE_DINFO_EARGS
+
+
     #ifndef NO_STACK_ASSERT
     int assert_result = make_error_steck(stack);
     

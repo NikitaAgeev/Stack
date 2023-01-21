@@ -1,4 +1,5 @@
 
+
 #include "Stack_settings.h"
 
 struct stack_t;
@@ -10,11 +11,10 @@ typedef struct stack_t* Stack;
 //define_eargs===============================================================
 
 //extra_args_define
-#define STACK_EARGS     STACK_ASSERT_DINFO_EARG, \
-                        STACK_ASSERT_DEBUG_EARG
+#define STACK_EARGS     STACK_ASSERT_EARG
 
-#define STACK_EARGS_IN  STACK_ASSERT_DINFO_EARG_IN, \
-                        STACK_ASSERT_DEBUG_EARG_IN
+#define STACK_EARGS_IN  STACK_ASSERT_EARG_IN
+
 
 //FUNCTION_ACCESS============================================================
 

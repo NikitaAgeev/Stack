@@ -187,7 +187,13 @@ static void stack_resize_f (Stack stack)
 int stack_ctor_f (Stack* stack, const char* name, STACK_EARGS)
 {
     int clear_flag = 0;
-    
+
+    #ifndef NO_STACK_DUMP_EINFO
+    UNUSE_IF_NO_FNKASSERT(line);
+    #else
+    UNUSE_VAR(name);
+    #endif
+
     if((*stack != nullptr) && (*stack != (Stack)ADR_POISON))
     {
         free((*stack)->mem);
@@ -212,6 +218,8 @@ int stack_ctor_f (Stack* stack, const char* name, STACK_EARGS)
     (*stack)->error = 0;
     (*stack)->warnings = 0;
     if(clear_flag == 1) (*stack)->warnings = STACK_HAS_BEEN_CLEARED;
+    #else
+    (void)clear_flag;
     #endif
 
     (*stack)->len = -1;
@@ -227,7 +235,12 @@ int stack_ctor_f (Stack* stack, const char* name, STACK_EARGS)
 
 void stack_dtor_f (Stack* stack, STACK_EARGS)
 {
-    
+    #ifndef NO_STACK_DUMP_EINFO
+    UNUSE_IF_NO_FNKASSERT(my_file);
+    UNUSE_IF_NO_FNKASSERT(my_func);
+    UNUSE_IF_NO_FNKASSERT(line);
+    #endif
+
     FUNC_ASERT(*stack);
 
     free((*stack)->mem - 1);
@@ -246,7 +259,12 @@ void stack_dtor_f (Stack* stack, STACK_EARGS)
 
 void stack_push_f (Stack stack, stack_el_t elem, STACK_EARGS)
 {
-    
+    #ifndef NO_STACK_DUMP_EINFO
+    UNUSE_IF_NO_FNKASSERT(my_file);
+    UNUSE_IF_NO_FNKASSERT(my_func);
+    UNUSE_IF_NO_FNKASSERT(line);
+    #endif
+
     FUNC_ASERT(stack);
 
     (stack)->len ++;
@@ -262,6 +280,11 @@ void stack_push_f (Stack stack, stack_el_t elem, STACK_EARGS)
 
 stack_el_t stack_pop_f (Stack stack, STACK_EARGS)
 { 
+    #ifndef NO_STACK_DUMP_EINFO
+    UNUSE_IF_NO_FNKASSERT(my_file);
+    UNUSE_IF_NO_FNKASSERT(my_func);
+    UNUSE_IF_NO_FNKASSERT(line);
+    #endif
 
     FUNC_ASERT(stack);
 
